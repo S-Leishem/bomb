@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Stickwoman, Bomb & Love Proposal</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: black;
+      overflow: hidden;
+    }
+    #star-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      z-index: 0;
+    }
+    .plain {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 80px;
+      background: #111;
+      z-index: 1;
+      border-top: 2px solid #222;
+    }
+    .stickwoman-container {
+      position: absolute;
+      bottom: 80px;
+      left: 5vw;
+      width: 60px;
+      height: 120px;
+      z-index: 2;
+    }
+    .stickwoman {
+      width: 60px;
+      height: 120px;
+      display: block;
+    }
+    .bomb-container {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 80px;
+      z-index: 3;
+      pointer-events: none;
+      top: -100px;
+    }
+    .splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: white;
+      opacity: 0;
+      z-index: 9;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .show-splash {
+      opacity: 1;
+    }
+    .proposal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://images.unsplash.com/photo-1514327603305-ef8ef9f32bdf?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    .proposal.show {
+      opacity: 1;
+    }
+    .proposal h1 {
+      color: #ff69b4;
+      text-shadow: 0 2px 8px white;
+      font-size: 3rem;
+      margin: 10px;
+    }
+    .proposal p {
+      color: white;
+      font-size: 1.8rem;
+      margin: 10px;
+    }
+    .proposal .buttons {
+      margin-top: 20px;
+    }
+    .proposal button {
+      padding: 10px 20px;
+      margin: 0 15px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .proposal button.yes {
+      background: #ff4081;
+      color: white;
+    }
+    .proposal button.no {
+      background: #999;
+      color: white;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="star-canvas"></canvas>
+  <div class="plain"></div>
+  <div class="stickwoman-container" id="stickwoman-container">
+    <svg class="stickwoman" viewBox="0 0 60 120">
+      <circle cx="30" cy="20" r="12" fill="none" stroke="#fff" stroke-width="3"/>
+      <path d="M18 20 q12 -18 24 0" fill="none" stroke="#fff" stroke-width="2"/>
+      <line x1="30" y1="32" x2="30" y2="70" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <line id="larm" x1="30" y1="42" x2="10" y2="50" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <line id="rarm" x1="30" y1="42" x2="50" y2="50" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <polygon points="18,70 42,70 30,95" fill="none" stroke="#fff" stroke-width="3"/>
+      <line id="lleg" x1="30" y1="95" x2="22" y2="115" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <line id="rleg" x1="30" y1="95" x2="38" y2="115" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="bomb-container" id="bomb-container">
+    <svg viewBox="0 0 40 80" width="40" height="80">
+      <ellipse cx="20" cy="38" rx="14" ry="28" fill="#888" stroke="#444" stroke-width="3"/>
+      <ellipse cx="20" cy="14" rx="8" ry="10" fill="#bbb" stroke="#444" stroke-width="2"/>
+      <polygon points="4,70 20,60 36,70 20,66" fill="#444"/>
+      <circle cx="20" cy="38" r="7" fill="#ffe082" stroke="#444" stroke-width="1"/>
+      <path d="M20 38 L20 31" stroke="#444" stroke-width="2"/>
+      <path d="M20 38 L25.5 42.5" stroke="#444" stroke-width="2"/>
+      <path d="M20 38 L14.5 42.5" stroke="#444" stroke-width="2"/>
+    </svg>
+  </div>
+  <div class="splash" id="splash"></div>
+  <div class="proposal" id="proposal">
+    <h1>I love you ❤️</h1>
+    <p>Will you accept my flowers?</p>
+    <div class="buttons">
+      <button class="yes" id="yesBtn">Yes</button>
+      <button class="no" id="noBtn">No</button>
+    </div>
+  </div>
+  <script>
+    // stars
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    canvas.width = w;
+    canvas.height = h;
+    const STAR_COUNT = 80;
+    const stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.1 + 0.2,
+        d: Math.random() * 2 + 1,
+        p: Math.random() * Math.PI * 2
+      });
+    }
+    function drawStars() {
+      ctx.clearRect(0, 0, w, h);
+      for (let i = 0; i < STAR_COUNT; i++) {
+        const s = stars[i];
+        s.p += 0.01 * s.d;
+        const opacity = 0.6 + 0.4 * Math.sin(s.p);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${opacity})`;
+        ctx.shadowColor = '#fff';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+      }
+    }
+    function animateStars() {
+      drawStars();
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+    window.addEventListener('resize', () => {
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = w;
+      canvas.height = h;
+    });
+
+    // walking
+    const container = document.getElementById('stickwoman-container');
+    const larm = document.getElementById('larm');
+    const rarm = document.getElementById('rarm');
+    const lleg = document.getElementById('lleg');
+    const rleg = document.getElementById('rleg');
+    const bomb = document.getElementById('bomb-container');
+    const splash = document.getElementById('splash');
+    const proposal = document.getElementById('proposal');
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn = document.getElementById('noBtn');
+
+    let pos = 5; // vw
+    const end = 50;
+    let frame = 0;
+
+    function walk() {
+      if (pos < end) {
+        pos += 0.5;
+        container.style.left = pos + "vw";
+        const swing = Math.sin(frame/6) * 8;
+        lleg.setAttribute("x2", 22 + swing);
+        rleg.setAttribute("x2", 38 + swing);
+        larm.setAttribute("x2", 10 - swing);
+        rarm.setAttribute("x2", 50 - swing);
+        frame++;
+        requestAnimationFrame(walk);
+      } else {
+        lleg.setAttribute("x2", 22);
+        rleg.setAttribute("x2", 38);
+        larm.setAttribute("x2", 10);
+        rarm.setAttribute("x2", 50);
+        dropBomb();
+      }
+    }
+
+    function dropBomb() {
+      let bombTop = -100;
+      const bombSpeed = 5;
+      function animateBomb() {
+        bombTop += bombSpeed;
+        bomb.style.top = bombTop + "px";
+        if (bombTop + 80 >= window.innerHeight - 80 - 120) {
+          splash.classList.add("show-splash");
+          setTimeout(() => {
+            splash.classList.remove("show-splash");
+            proposal.classList.add("show");
+          }, 400);
+          return;
+        }
+        requestAnimationFrame(animateBomb);
+      }
+      animateBomb();
+    }
+
+    walk();
+
+    // yes button
+    yesBtn.addEventListener("click", () => {
+      window.location.href = "https://s-leishem.github.io/flower/";
+    });
+
+    // no button runaway
+    noBtn.addEventListener("mouseover", () => {
+      const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+      const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+      noBtn.style.position = "absolute";
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    });
+  </script>
+</body>
+</html>
